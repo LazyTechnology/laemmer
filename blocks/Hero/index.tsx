@@ -40,6 +40,10 @@ const Hero: Block = {
           label: 'Screenshot',
           value: 'screenshot',
         },
+        {
+          label: 'Arrière plan',
+          value: 'background',
+        },
       ],
       defaultValue: 'basic',
       admin: {
@@ -67,7 +71,7 @@ const Hero: Block = {
       relationTo: 'media',
       required: true,
       admin: {
-        condition: (_: Data, siblingData: Data): boolean => siblingData?.template === 'screenshot',
+        condition: (_: Data, siblingData: Data): boolean => siblingData?.template === 'screenshot' || siblingData?.template === 'background',
       },
     },
     {

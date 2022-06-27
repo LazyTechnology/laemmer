@@ -1,119 +1,96 @@
-import React from 'react';
-import {
-  Box,
-  IconButton,
-  useBreakpointValue,
-  Stack,
-  Heading,
-  Text,
-  Container,
-} from '@chakra-ui/react';
-import { BiLeftArrowAlt, BiRightArrowAlt } from 'react-icons/bi';
+import React, { Fragment, FC, useState } from 'react';
+import { Box, Center, useBreakpointValue } from '@chakra-ui/react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { Type } from '.';
 
-const Carousel: React.FC<Omit<Type, 'blockType'>> = ({ images, settings }) => {
-  const [slider, setSlider] = React.useState<Slider | null>(null);
+const HeaderText = dynamic(() => import('../../components/layout/Common/HeaderText/HeaderText'));
+const CarouselNavigation = dynamic(() => import('./Navigation/Component'));
+const CarouselCaption = dynamic(() => import('./Caption/Component'));
+
+const Carousel: FC<Omit<Type, 'blockType'>> = ({ template, images, settings, carouselTitle }) => {
+  const [slider, setSlider] = useState<Slider | null>(null);
 
   const top = useBreakpointValue({ base: '90%', md: '50%' });
   const side = useBreakpointValue({ base: '30%', md: '40px' });
 
   const carouselSettings = {
-    dots: true,
+    dots: false,
     arrows: false,
-    fade: true,
+    fade: template === 'presentation',
     infinite: false,
     autoplay: true,
     speed: 1500,
     autoplaySpeed: 5000,
     slidesToShow: settings.slidesToShow,
     slidesToScroll: settings.slidesToScroll,
+    swipeToSlide: true,
+    pauseOnHover: true,
   };
 
   return (
-    <Box
-      position="relative"
-      height={`${settings.height}px`}
-      width="full"
-      overflow="hidden"
-    >
-      <IconButton
-        aria-label="left-arrow"
-        variant="ghost"
-        position="absolute"
-        left={side}
-        top={top}
-        transform="translate(0%, -50%)"
-        zIndex={2}
-        onClick={() => slider?.slickPrev()}
-      >
-        <BiLeftArrowAlt size="40px" />
-      </IconButton>
-      <IconButton
-        aria-label="right-arrow"
-        variant="ghost"
-        position="absolute"
-        right={side}
-        top={top}
-        transform="translate(0%, -50%)"
-        zIndex={2}
-        onClick={() => { slider?.slickNext(); }}
-      >
-        <BiRightArrowAlt size="40px" />
-      </IconButton>
-      <Slider
-        {...carouselSettings}
-        ref={(s) => setSlider(s)}
-      >
-        {images.map((el, index) => (
-          <Box
-            key={index}
-            position="relative"
-          >
-            <Image
-              src={el.image.url}
-              alt={el.image.alt}
-              layout="fill"
-              objectFit="cover"
-              objectPosition="center"
-              priority
+    <Fragment>
+      {template !== 'presentation'
+          && carouselTitle && (
+            <HeaderText
+              title={carouselTitle.title}
+              accroche={carouselTitle.accroche}
             />
-            <Container
-              size="container.lg"
-              height="550px"
+      )}
+      <Box
+        position="relative"
+        {...(template === 'presentation' ? { height: `${settings.height}px` } : {})}
+        width="full"
+        overflow="hidden"
+        pt={4}
+      >
+        {settings.navigation && (
+        <CarouselNavigation
+          slider={slider}
+          top={top}
+          side={side}
+        />
+        )}
+        <Slider
+          {...carouselSettings}
+          ref={(s) => setSlider(s)}
+        >
+          {images.map((el, index) => (
+            <Box
+              key={index}
               position="relative"
             >
-              <Stack
-                spacing={6}
-                position="relative"
-                top="50%"
-                transform="translate(0, -50%)"
-              >
-                <Heading
-                  fontSize={{ base: '3xl', md: '4xl', lg: '5xl' }}
-                  color="white"
-                  textAlign="center"
-                  textShadow="#000 1px 0 10px;"
-                >
-                  {el.legend.title}
-                </Heading>
-                <Text
-                  fontSize={{ base: 'md', lg: 'lg' }}
-                  color="white"
-                  textAlign="center"
-                  fontWeight="semibold"
-                  textShadow="#000 1px 0 10px;"
-                >
-                  {el.legend.description}
-                </Text>
-              </Stack>
-            </Container>
-          </Box>
-        ))}
-      </Slider>
-    </Box>
+              <Center>
+                <Image
+                  src={el.image.url}
+                  alt={el.image.alt}
+                  {...(template === 'list' ? { width: settings.sizeType === 'custom' ? settings.sizeGroup.width : '100%', height: settings.sizeType === 'custom' ? settings.sizeGroup.height : '100%' } : { layout: 'fill' })}
+                  objectFit={template === 'presentation' ? 'cover' : 'contain'}
+                  objectPosition="center"
+                  quality={75}
+                  priority
+                />
+              </Center>
+              {(el?.legend?.title !== '' || el?.legend?.description !== '')
+              && template === 'presentation' ? (
+                <CarouselCaption
+                  title={el?.legend?.title}
+                  accroche={el?.legend?.description}
+                />
+                ) : (
+                  <HeaderText
+                    settings={{ spacing: 4, heading: { fontSize: 18 }, text: { fontSize: 13 } }}
+                    title={el?.legend?.title}
+                    accroche={el?.legend?.description}
+                  />
+                )}
+            </Box>
+          ))}
+        </Slider>
+      </Box>
+    </Fragment>
   );
 };
 
